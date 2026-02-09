@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="hr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>e-Dnevnik | Roditelj</title>
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #b5fad6, #a2a04b);
+            font-family: Arial, sans-serif;
+            padding: 40px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 600px;
+            margin: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s;
+        }
+
+        .grade-item:hover {
+            background: #f9f9f9;
+        }
+
+        .grade-circle {
+            background: #764ba2;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .grade-info {
+            flex-grow: 1;
+            margin-left: 20px;
+        }
+
+        .grade-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .summary-box {
+            margin-top: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .avg-large {
+            display: block;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #764ba2;
+        }
+
+        .logout {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #999;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="imeUcenika">Pregled ocjena</h1>
+            <p>Portal za roditelje</p>
+        </div>
+
+        <div id="listaOcjena">
+        </div>
+
+        <div class="summary-box">
+            <span>Ukupni prosjek djeteta</span>
+            <span class="avg-large" id="prosjekDjeteta">0.00</span>
+        </div>
+
+        <a href="index.html" class="logout">Odjavi se</a>
+    </div>
+
+    <script>
+        const username = localStorage.getItem('currentUser');
+        const baza = JSON.parse(localStorage.getItem('globalnaBaza'));
+        const listaDiv = document.getElementById('listaOcjena');
+        const ucenikKey = "Kalista.Galov";
+
+        if (baza && baza[ucenikKey]) {
+            const ucenik = baza[ucenikKey];
+            document.getElementById('imeUcenika').textContent = "Pregled za: " + ucenik.ime;
+
+            let suma = 0;
+            let brojOcjena = 0;
+            listaDiv.innerHTML = "";
+
+            ucenik.podaci.forEach(o => {
+                const item = document.createElement('div');
+                item.className = 'grade-item';
+                item.style.alignItems = 'center';
+
+                // Logika za krug s ocjenom
+                let krugHTML = '';
+                if (o.ocjena) {
+                    suma += Number(o.ocjena);
+                    brojOcjena++;
+                    const boja = o.ocjena >= 4 ? '#2ecc71' : (o.ocjena == 3 ? '#f1c40f' : '#e74c3c');
+                    krugHTML = `<div class="grade-circle" style="background: ${boja}; min-width: 35px;">${o.ocjena}</div>`;
+                } else {
+                    // Ako nema ocjene, stavljamo ikonu obavijesti
+                    krugHTML = `<div class="grade-circle" style="background: #764ba2; min-width: 35px;">i</div>`;
+                }
+
+                // Logika za opis
+                const tekstOpisa = o.opis ? o.opis : "<span style='color:#ccc;'>Nema dodatnog opisa.</span>";
+
+                item.innerHTML = `
+                ${krugHTML}
+                <div class="grade-info" style="margin-left: 15px;">
+                    <div style="font-size: 0.75rem; color: #888; text-transform: uppercase;">${o.ocjena ? 'Ocjena i bilješka' : 'Samo bilješka'}</div>
+                    <div class="grade-description" style="color: #333; font-size: 1rem;">${tekstOpisa}</div>
+                </div>
+            `;
+                listaDiv.appendChild(item);
+            });
+
+            // Izračun prosjeka (samo ako ima ocjena)
+            const prosjek = brojOcjena > 0 ? (suma / brojOcjena).toFixed(2) : "0.00";
+            document.getElementById('prosjekDjeteta').textContent = prosjek;
+        }
+    </script>
+
+</body>
+
+</html>

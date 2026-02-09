@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="hr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>e-Dnevnik | Moje Ocjene</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #b5fad6, #a2a04b);
+            font-family: Arial, sans-serif;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2.5rem;
+            border-radius: 22px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .grade-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .grade-item {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .grade-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .grade-item:active {
+            transform: scale(0.9);
+        }
+
+        .grade-box {
+            background: #764ba2;
+            color: white;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        /* Različite boje za ocjene */
+        .color-5 { background: #2ecc71; }
+        .color-4 { background: #27ae60; }
+        .color-3 { background: #f1c40f; }
+        .color-2 { background: #e67e22; }
+        .color-1 { background: #e74c3c; }
+        .color-info { background: #3498db; }
+
+        #opisZone {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f2f5;
+            border-radius: 10px;
+            color: #333;
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-style: normal;
+            border: 1px dashed #764ba2;
+        }
+
+        .average-section {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .average-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1 id="imeUcenika">Učitavanje...</h1>
+        <p>Klikni na ocjenu ili "i" za detalje:</p>
+
+        <div class="grade-container" id="prikazOcjena"></div>
+
+        <div id="opisZone">Kliknite na stavku iznad...</div>
+
+        <div class="average-section">
+            <div style="color: #666;">Moj ukupni prosjek:</div>
+            <div class="average-value" id="mojProsjek">0.00</div>
+        </div>
+        <br>
+        <a href="index.html" style="color:#888; text-decoration:none; font-size:0.8rem;">Odjavi se</a>
+    </div>
+
+    <script>
+        const prijavljeniUser = localStorage.getItem('currentUser');
+        const baza = JSON.parse(localStorage.getItem('globalnaBaza'));
+        const opisZone = document.getElementById('opisZone');
+
+        if (prijavljeniUser && baza && baza[prijavljeniUser]) {
+            const ucenik = baza[prijavljeniUser];
+            document.getElementById('imeUcenika').textContent = ucenik.ime;
+            const kontejner = document.getElementById('prikazOcjena');
+            
+            let suma = 0;
+            let brojOcjena = 0;
+
+            kontejner.innerHTML = ""; // Očisti kontejner
+
+            ucenik.podaci.forEach(stavka => {
+                const gradeWrapper = document.createElement('div');
+                gradeWrapper.className = 'grade-item';
+
+                const box = document.createElement('div');
+                box.className = 'grade-box';
+
+                // Provjera je li u pitanju ocjena ili samo bilješka
+                if (stavka.ocjena) {
+                    box.textContent = stavka.ocjena;
+                    box.classList.add('color-' + stavka.ocjena);
+                    suma += Number(stavka.ocjena);
+                    brojOcjena++;
+                } else {
+                    box.textContent = "i";
+                    box.classList.add('color-info');
+                }
+
+                gradeWrapper.onclick = () => {
+                    const naslov = stavka.ocjena ? `Ocjena ${stavka.ocjena}` : "Bilješka/Komentar";
+                    opisZone.innerHTML = `<span style="font-weight:bold; color:#764ba2;">${naslov}</span>
+                                          <span style="margin-top:5px;">${stavka.opis || 'Nema opisa.'}</span>`;
+                    opisZone.style.background = "#fff";
+                    opisZone.style.borderStyle = "solid";
+                };
+
+                gradeWrapper.appendChild(box);
+                kontejner.appendChild(gradeWrapper);
+            });
+
+            // Izračun prosjeka
+            const prosjek = brojOcjena > 0 ? (suma / brojOcjena).toFixed(2) : "0.00";
+            document.getElementById('mojProsjek').textContent = prosjek;
+
+        } else {
+            // Ako korisnik nije ulogiran, vrati ga na početnu
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>
