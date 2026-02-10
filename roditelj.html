@@ -5,20 +5,26 @@
     <meta charset="UTF-8">
     <title>e-Dnevnik | Roditelj</title>
     <style>
-        body {
+        * {
+            box-sizing: border-box;
             margin: 0;
-            background: linear-gradient(135deg, #b5fad6, #a2a04b);
+            padding: 0;
+        }
+
+        body {
             font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #b5fad6, #a2a04b);
             padding: 40px;
+            min-height: 100vh;
         }
 
         .container {
             background: white;
             padding: 30px;
             border-radius: 20px;
-            max-width: 600px;
+            max-width: 650px;
             margin: auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
         .header {
@@ -28,55 +34,93 @@
             margin-bottom: 20px;
         }
 
+        .header h1 {
+            font-size: 1.6rem;
+            color: #333;
+        }
+
+        .header p {
+            color: #777;
+            margin-top: 5px;
+        }
+
+        .tab {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px;
+            background: #eee;
+            font-weight: bold;
+            transition: all 0.25s ease;
+        }
+
+        .tab button:hover {
+            background: #ddd;
+        }
+
+        .tab button.active {
+            background: #764ba2;
+            color: white;
+            box-shadow: 0 4px 10px rgba(118, 75, 162, 0.3);
+        }
+
+        .tabcontent {
+            display: none;
+        }
+
         .grade-item {
             display: flex;
-            justify-content: space-between;
             align-items: center;
             padding: 15px;
             border-bottom: 1px solid #eee;
-            transition: background 0.3s;
-        }
-
-        .grade-item:hover {
-            background: #f9f9f9;
         }
 
         .grade-circle {
-            background: #764ba2;
-            color: white;
             width: 35px;
             height: 35px;
+            min-width: 35px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            color: white;
+            font-size: 1rem;
         }
 
         .grade-info {
             flex-grow: 1;
-            margin-left: 20px;
+            margin-left: 15px;
         }
 
         .grade-description {
-            font-size: 0.9rem;
-            color: #666;
+            font-size: 1rem;
+            color: #333;
             margin-top: 4px;
         }
 
         .summary-box {
-            margin-top: 30px;
+            margin-top: 25px;
             background: #f8f9fa;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 12px;
             text-align: center;
+            border: 1px solid #eee;
         }
 
         .avg-large {
             display: block;
-            font-size: 2.5rem;
+            font-size: 2.6rem;
             font-weight: bold;
             color: #764ba2;
+            margin-top: 5px;
         }
 
         .logout {
@@ -85,78 +129,118 @@
             margin-top: 20px;
             color: #999;
             text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .logout:hover {
+            color: #333;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
+
         <div class="header">
             <h1 id="imeUcenika">Pregled ocjena</h1>
             <p>Portal za roditelje</p>
         </div>
 
-        <div id="listaOcjena">
+        <div class="tab">
+            <button class="tablinks active" onclick="openTab(event,'ocjene')">Ocjene</button>
+            <button class="tablinks" onclick="openTab(event,'biljeske')">Bilješke</button>
+            <button class="tablinks" onclick="openTab(event,'ostalo')">Ostalo</button>
         </div>
 
-        <div class="summary-box">
-            <span>Ukupni prosjek djeteta</span>
-            <span class="avg-large" id="prosjekDjeteta">0.00</span>
+        <div id="ocjene" class="tabcontent" style="display:block;">
+            <div id="listaOcjena"></div>
+            <div class="summary-box">
+                <span>Ukupni prosjek djeteta</span>
+                <span class="avg-large" id="prosjekDjeteta">0.00</span>
+            </div>
+        </div>
+
+        <div id="biljeske" class="tabcontent">
+            <div id="listaBiljeski"></div>
+        </div>
+
+        <div id="ostalo" class="tabcontent">
+            <p>Broj izostanaka : <span id="brojIzostanaka">0</span></p>
+            <p>Broj negativnih ocjena : <span id="brojNegativnih">0</span></p>
+            <p>Vladanje : <span id="brojVladanje">0</span></p>
+            <div class="summary-box">
+                <span>Ukupni prosjek djeteta</span>
+                <span class="avg-large" id="prosjekDjeteta">0.00</span>
+            </div>
         </div>
 
         <a href="index.html" class="logout">Odjavi se</a>
     </div>
 
     <script>
-        const username = localStorage.getItem('currentUser');
-        const baza = JSON.parse(localStorage.getItem('globalnaBaza'));
-        const listaDiv = document.getElementById('listaOcjena');
-        const ucenikKey = "Kalista.Galov";
+        document.addEventListener("DOMContentLoaded", () => {
 
-        if (baza && baza[ucenikKey]) {
-            const ucenik = baza[ucenikKey];
-            document.getElementById('imeUcenika').textContent = "Pregled za: " + ucenik.ime;
+            const baza = JSON.parse(localStorage.getItem('globalnaBaza'));
+            const ucenikKey = "Kalista.Galov"; // ili vezano na login roditelja
 
-            let suma = 0;
-            let brojOcjena = 0;
-            listaDiv.innerHTML = "";
+            const listaOcjena = document.getElementById('listaOcjena');
+            const listaBiljeski = document.getElementById('listaBiljeski');
+            const prosjekEls = document.querySelectorAll('#prosjekDjeteta');
+            const elIz = document.getElementById('brojIzostanaka');
+            const elNeg = document.getElementById('brojNegativnih');
+            const elVladanje = document.getElementById('brojVladanje');
 
-            ucenik.podaci.forEach(o => {
-                const item = document.createElement('div');
-                item.className = 'grade-item';
-                item.style.alignItems = 'center';
+            listaOcjena.innerHTML = "";
+            listaBiljeski.innerHTML = "";
 
-                // Logika za krug s ocjenom
-                let krugHTML = '';
-                if (o.ocjena) {
-                    suma += Number(o.ocjena);
-                    brojOcjena++;
-                    const boja = o.ocjena >= 4 ? '#2ecc71' : (o.ocjena == 3 ? '#f1c40f' : '#e74c3c');
-                    krugHTML = `<div class="grade-circle" style="background: ${boja}; min-width: 35px;">${o.ocjena}</div>`;
-                } else {
-                    // Ako nema ocjene, stavljamo ikonu obavijesti
-                    krugHTML = `<div class="grade-circle" style="background: #764ba2; min-width: 35px;">i</div>`;
-                }
+            let suma = 0, brojOcjena = 0, negativne = 0;
 
-                // Logika za opis
-                const tekstOpisa = o.opis ? o.opis : "<span style='color:#ccc;'>Nema dodatnog opisa.</span>";
+            if (baza && baza[ucenikKey]) {
+                const ucenik = baza[ucenikKey];
+                const podaci = ucenik.podaci || [];
+                const izostanci = ucenik.izostanci || [];
+                const vladanje = ucenik.vladanje || 0;
 
-                item.innerHTML = `
-                ${krugHTML}
-                <div class="grade-info" style="margin-left: 15px;">
-                    <div style="font-size: 0.75rem; color: #888; text-transform: uppercase;">${o.ocjena ? 'Ocjena i bilješka' : 'Samo bilješka'}</div>
-                    <div class="grade-description" style="color: #333; font-size: 1rem;">${tekstOpisa}</div>
-                </div>
-            `;
-                listaDiv.appendChild(item);
-            });
+                document.getElementById('imeUcenika').textContent = "Pregled za: " + ucenik.ime;
 
-            // Izračun prosjeka (samo ako ima ocjena)
-            const prosjek = brojOcjena > 0 ? (suma / brojOcjena).toFixed(2) : "0.00";
-            document.getElementById('prosjekDjeteta').textContent = prosjek;
+                podaci.forEach(o => {
+                    const item = document.createElement("div");
+                    item.className = "grade-item";
+                    const opis = o.opis || "Nema opisa";
+
+                    if (o.ocjena !== null && o.ocjena !== undefined) {
+                        suma += Number(o.ocjena);
+                        brojOcjena++;
+                        if (o.ocjena <= 2) negativne++;
+                        const boja = o.ocjena >= 4 ? "#2ecc71" : o.ocjena == 3 ? "#f1c40f" : "#e74c3c";
+                        item.innerHTML = `<div class="grade-circle" style="background:${boja}">${o.ocjena}</div>
+                                  <div class="grade-info"><div class="grade-description">${opis}</div></div>`;
+                        listaOcjena.appendChild(item);
+                    } else {
+                        item.innerHTML = `<div class="grade-circle" style="background:#764ba2">i</div>
+                                <div class="grade-info"><div class="grade-description">${opis}</div></div>`;
+                        listaBiljeski.appendChild(item);
+                    }
+                });
+
+                const prosjek = brojOcjena ? (suma / brojOcjena).toFixed(2) : "0.00";
+                prosjekEls.forEach(el => el.textContent = prosjek);
+                if (elIz) elIz.textContent = izostanci.length;
+                if (elNeg) elNeg.textContent = negativne;
+                if (elVladanje) elVladanje.textContent = vladanje;
+            }
+        });
+
+        // TAB NAVIGACIJA
+        function openTab(evt, tabName) {
+            const tabcontent = document.getElementsByClassName("tabcontent");
+            const tablinks = document.getElementsByClassName("tablinks");
+            for (let i = 0; i < tabcontent.length; i++) { tabcontent[i].style.display = "none"; }
+            for (let i = 0; i < tablinks.length; i++) { tablinks[i].classList.remove("active"); }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.classList.add("active");
         }
     </script>
-
 </body>
 
 </html>

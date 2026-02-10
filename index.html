@@ -147,24 +147,42 @@
         const password = document.getElementById('password');
         const error = document.getElementById('errorMsg');
 
-        // ==========================================================
-        // BAZA PODATAKA S OPISIMA OCJENA
-        //{ ocjena: 5, opis: "Odličan rad na satu!" }, // 1. Oboje
-        //{ ocjena: 4, opis: "" },// 2. Samo ocjena (prazan opis)
-        //{ ocjena: null, opis: "Bilješka: Kalista je zaboravila pribor." } // 3. Samo komentar (bez ocjene)
-
-        // ==========================================================
+        // ==========================================
+        // DEFAULT BAZA UČENIKA
+        //{ datum: "10.2.2026", razlog: "Bolest" }
+        //===========================================
+        //{ ocjena: 3, opis: "" },
+        //{ ocjena: 2, opis: "Loš rad na satu" },  // <-- ovo je negativna
+        //{ ocjena: null, opis: "Bilješka: zaboravila pribor" }
+        // ==========================================
         const bazaUcenika = {
             "Kalista.Galov": {
                 ime: "Kalista Galov",
+                izostanci: [
+                ],
                 podaci: [
-                    { ocjena: null, opis: "Bilješka: Prvi sat 11.2.2026." }, // 3. Samo komentar (bez ocjene)
-                ]
-            },
+
+                    { ocjena: null, opis: "Prvi sat 11.2.2026" },
+                    { ocjena: null, opis: "Početak sata bi trebao biti od 19 do 20" },
+
+                ],
+                vladanje: 5 // npr. ocjena vladanja
+            }
         };
 
+
+        // Ako već nema spremljene baze, spremi default
+        if (!localStorage.getItem('globalnaBaza')) {
+            localStorage.setItem('globalnaBaza', JSON.stringify(bazaUcenika));
+        }
+
+        // ==========================================
+        // LOGIN
+        // ==========================================
         btn.addEventListener('click', () => {
+
             error.style.display = 'none';
+
             const user = username.value.trim();
             const pass = password.value;
 
@@ -177,37 +195,41 @@
             btn.disabled = true;
             btn.textContent = 'Provjera…';
 
-            // SPREMANJE BAZE I KORISNIKA
-            localStorage.setItem('globalnaBaza', JSON.stringify(bazaUcenika));
-
             setTimeout(() => {
+
                 btn.disabled = false;
                 btn.textContent = 'Prijava';
 
-                // Nastavnik Login
+                // === Nastavnik ===
                 if (user === 'Prof.Boris' && pass === '2805') {
                     localStorage.setItem('currentUser', 'Prof.Boris');
                     window.location.href = 'nastavnik.html';
                     return;
                 }
-                // Roditelj Login
+
+                // === Roditelj ===
                 if (user === 'Ivana.Galov' && pass === 'galov123') {
                     localStorage.setItem('currentUser', 'Ivana.Galov');
                     window.location.href = 'roditelj.html';
                     return;
                 }
 
-                // Učenik Login
-                if (bazaUcenika[user] && pass === 'ucenik123') {
+                // === Učenik ===
+                const baza = JSON.parse(localStorage.getItem('globalnaBaza'));
+                if (baza[user] && pass === 'ucenik123') {
                     localStorage.setItem('currentUser', user);
                     window.location.href = 'ucenik.html';
                     return;
                 }
 
+                // === Greška ===
+                error.textContent = 'Korisničko ime ili lozinka nisu ispravni.';
                 error.style.display = 'block';
                 password.value = '';
-            }, 800);
+
+            }, 600);
         });
+
     </script>
 </body>
 
