@@ -168,6 +168,8 @@
             <p>Broj izostanaka : <span id="brojIzostanaka">0</span></p>
             <p>Broj negativnih ocjena : <span id="brojNegativnih">0</span></p>
             <p>Vladanje : <span id="brojVladanje">0</span></p>
+            <div id="listaIzostanaka"></div>
+
             <div class="summary-box">
                 <span>Ukupni prosjek djeteta</span>
                 <span class="avg-large" id="prosjekDjeteta">0.00</span>
@@ -176,17 +178,20 @@
 
         <a href="index.html" class="logout">Odjavi se</a>
     </div>
+    <script src="baza.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
 
-            const baza = JSON.parse(localStorage.getItem('globalnaBaza'));
-            const ucenikKey = "Kalista.Galov"; // ili vezano na login roditelja
+
+            const ucenikKey = "Kalista.Galov";
+            const ucenik = baza[ucenikKey];
 
             const listaOcjena = document.getElementById('listaOcjena');
             const listaBiljeski = document.getElementById('listaBiljeski');
             const prosjekEls = document.querySelectorAll('#prosjekDjeteta');
             const elIz = document.getElementById('brojIzostanaka');
+            const listaIzostanaka = document.getElementById('listaIzostanaka');
             const elNeg = document.getElementById('brojNegativnih');
             const elVladanje = document.getElementById('brojVladanje');
 
@@ -226,6 +231,26 @@
                 const prosjek = brojOcjena ? (suma / brojOcjena).toFixed(2) : "0.00";
                 prosjekEls.forEach(el => el.textContent = prosjek);
                 if (elIz) elIz.textContent = izostanci.length;
+                // ISPIS IZOSTANAKA
+                listaIzostanaka.innerHTML = "";
+
+                izostanci.forEach((i, index) => {
+                    const redniBroj = index + 1;
+
+                    const div = document.createElement("div");
+                    div.className = "grade-item";
+                    div.innerHTML = `
+        <div class="grade-circle" style="background:#e67e22">${redniBroj}</div>
+        <div class="grade-info">
+            <div class="grade-description">
+                <strong>${redniBroj}. izostanak</strong><br>
+                ${i.datum} — ${i.razlog}
+            </div>
+        </div>`;
+                    listaIzostanaka.appendChild(div);
+                });
+
+
                 if (elNeg) elNeg.textContent = negativne;
                 if (elVladanje) elVladanje.textContent = vladanje;
             }
