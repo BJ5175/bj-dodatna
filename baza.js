@@ -14,7 +14,8 @@ const baza = {
             { datum: "11.2.2026", razlog: "Obiteljski razlozi" }
         ],
         podaci: [
-            { ocjena: null, opis: "Prvi sat 18.2.2026" },
+            { ocjena: null, opis: "Prvi sat 14.2.2026." },
+            { ocjena: null, opis: "Učenica Kalista dobila izostanak : 1" },
             
         ],
         vladanje: 5
