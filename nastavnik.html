@@ -5,62 +5,75 @@
     <meta charset="UTF-8">
     <title>e-Dnevnik | Nastavnik</title>
     <style>
-        body {
+        * {
+            box-sizing: border-box;
             margin: 0;
-            background: linear-gradient(135deg, #b5fad6, #a2a04b);
+            padding: 0;
+        }
+
+        body {
             font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #b5fad6, #a2a04b);
             padding: 40px;
+            min-height: 100vh;
         }
 
         .container {
             background: white;
             padding: 30px;
             border-radius: 20px;
-            max-width: 900px;
+            max-width: 650px;
             margin: auto;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            margin-bottom: 30px;
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
         }
 
-        th,
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            text-align: left;
+        .header h1 {
+            font-size: 1.6rem;
+            color: #333;
         }
 
-        /* Klikabilno ime učenika */
-        .ucenik-link {
-            color: #764ba2;
+        .header p {
+            color: #777;
+            margin-top: 5px;
+        }
+
+        .tab {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab button {
+            flex: 1;
+            padding: 12px;
+            border: none;
             cursor: pointer;
-            text-decoration: underline;
+            border-radius: 10px;
+            background: #eee;
             font-weight: bold;
         }
 
-        .ucenik-link:hover {
-            color: #a2a04b;
+        .tab button.active {
+            background: #764ba2;
+            color: white;
         }
 
-        /* Stilovi za kartice (kao kod roditelja) */
-        .detalji-container {
-            border-top: 2px solid #eee;
-            padding-top: 20px;
+        .tabcontent {
             display: none;
-            animation: fadeIn 0.5s;
         }
 
         .grade-item {
             display: flex;
             align-items: center;
             padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
-            background: #fafafa;
+            border-bottom: 1px solid #eee;
             border-radius: 10px;
             margin-bottom: 10px;
         }
@@ -80,139 +93,117 @@
             margin-left: 15px;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .summary-box {
+            margin-top: 25px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #eee;
         }
 
-        .summary {
-            background: #333;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
+        .avg-large {
+            display: block;
+            font-size: 2.6rem;
+            font-weight: bold;
+            color: #764ba2;
+            margin-top: 5px;
+        }
+
+        .logout {
+            display: block;
             text-align: center;
+            margin-top: 20px;
+            color: #999;
+            text-decoration: none;
         }
     </style>
 </head>
 
 <body>
-
     <div class="container">
-        <h1>Administracija Ocjena</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th>Učenik (klikni za detalje)</th>
-                    <th>Zadnji unosi</th>
-                    <th>Prosjek</th>
-                </tr>
-            </thead>
-            <tbody id="tablicaBody"></tbody>
-        </table>
-
-        <div id="detaljanPregled" class="detalji-container">
-            <h2 id="detaljiIme" style="color: #333;"></h2>
-            <div id="listaDetalja"></div>
+        <div class="header">
+            <h1 id="imeUcenika">Učenik</h1>
+            <p>Nastavnički pregled</p>
         </div>
 
-        <div class="summary">Prosjek razreda: <span id="razredProsjek"
-                style="color: #ff9a9e; font-size: 1.5rem;">0.00</span></div>
-        <center><a href="index.html" style="display:block; margin-top:20px; color:#999; text-decoration:none;">Odjavi
-                se</a></center>
+        <div class="tab">
+            <button class="tablinks active" onclick="openTab(event,'ocjene')">Ocjene</button>
+            <button class="tablinks" onclick="openTab(event,'biljeske')">Bilješke</button>
+            <button class="tablinks" onclick="openTab(event,'ostalo')">Ostalo</button>
+        </div>
+
+        <div id="ocjene" class="tabcontent" style="display:block;">
+            <div id="listaOcjena"></div>
+            <div class="summary-box">Ukupni prosjek <span class="avg-large" id="prosjek">0.00</span></div>
+        </div>
+
+        <div id="biljeske" class="tabcontent">
+            <div id="listaBiljeski"></div>
+        </div>
+
+        <div id="ostalo" class="tabcontent">
+            <p>Broj izostanaka: <span id="brojIzostanaka">0</span></p>
+            <div id="listaIzostanaka"></div>
+        </div>
+
+        <a href="index.html" class="logout">Odjavi se</a>
     </div>
 
+    <script src="baza.js"></script>
     <script>
-        const baza = JSON.parse(localStorage.getItem('globalnaBaza'));
-        const tbody = document.getElementById('tablicaBody');
+        // Samo jedan učenik, primjer
+        const user = "Kalista.Galov";
+        const ucenik = baza[user];
 
-        function prikaziDetalje(userKey) {
-            const ucenik = baza[userKey];
-            const container = document.getElementById('detaljanPregled');
-            const lista = document.getElementById('listaDetalja');
-            const naslov = document.getElementById('detaljiIme');
+        document.getElementById("imeUcenika").textContent = "Pregled za: " + ucenik.ime;
 
-            naslov.textContent = "Povijest ocjena i bilješki: " + ucenik.ime;
-            lista.innerHTML = "";
-            container.style.display = "block";
+        // Ocjene
+        const listaOcjena = document.getElementById("listaOcjena");
+        const listaBiljeski = document.getElementById("listaBiljeski");
+        const listaIzostanaka = document.getElementById("listaIzostanaka");
 
-            ucenik.podaci.forEach(o => {
-                const item = document.createElement('div');
-                item.className = 'grade-item';
+        let suma = 0, broj = 0;
 
-                let krugHTML = '';
-                if (o.ocjena) {
-                    const boja = o.ocjena >= 4 ? '#2ecc71' : (o.ocjena == 3 ? '#f1c40f' : '#e74c3c');
-                    krugHTML = `<div class="grade-circle" style="background: ${boja}">${o.ocjena}</div>`;
-                } else {
-                    krugHTML = `<div class="grade-circle" style="background: #764ba2">i</div>`;
-                }
+        ucenik.podaci.forEach(o => {
+            const div = document.createElement("div");
+            div.className = "grade-item";
 
-                item.innerHTML = `
-                ${krugHTML}
-                <div class="grade-info">
-                    <div style="font-size: 0.75rem; color: #888; text-transform: uppercase;">${o.ocjena ? 'Ocjena' : 'Bilješka'}</div>
-                    <div style="color: #333; font-weight: 500;">${o.opis || 'Bez opisa'}</div>
-                </div>
-            `;
-                lista.appendChild(item);
-            });
-
-            // Automatsko skrolanje do detalja
-            container.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        if (baza) {
-            let ukupnoProsjeka = 0;
-            let brojUcenika = 0;
-
-            for (let user in baza) {
-                const ucenik = baza[user];
-                let suma = 0;
-                let count = 0;
-
-                ucenik.podaci.forEach(p => { if (p.ocjena) { suma += p.ocjena; count++; } });
-                const prosjek = count > 0 ? (suma / count).toFixed(2) : "0.00";
-
-                const tr = document.createElement('tr');
-
-                // Klikabilno ime
-                const tdIme = document.createElement('td');
-                tdIme.innerHTML = `<span class="ucenik-link" onclick="prikaziDetalje('${user}')">${ucenik.ime}</span>`;
-
-                // Kratki prikaz zadnjih par ocjena
-                const tdOcjene = document.createElement('td');
-                ucenik.podaci.slice(-3).forEach(o => {
-                    const span = document.createElement('span');
-                    span.style.marginRight = "5px";
-                    span.style.padding = "2px 6px";
-                    span.style.background = "#eee";
-                    span.style.borderRadius = "4px";
-                    span.textContent = o.ocjena ? o.ocjena : "i";
-                    tdOcjene.appendChild(span);
-                });
-
-                const tdAvg = document.createElement('td');
-                tdAvg.textContent = prosjek;
-
-                tr.appendChild(tdIme);
-                tr.appendChild(tdOcjene);
-                tr.appendChild(tdAvg);
-                tbody.appendChild(tr);
-
-                if (count > 0) {
-                    ukupnoProsjeka += parseFloat(prosjek);
-                    brojUcenika++;
-                }
+            if (o.ocjena !== null && o.ocjena !== undefined) {
+                suma += Number(o.ocjena); broj++;
+                const boja = o.ocjena >= 4 ? "#2ecc71" : (o.ocjena == 3 ? "#f1c40f" : "#e74c3c");
+                div.innerHTML = `<div class="grade-circle" style="background:${boja}">${o.ocjena}</div>
+        <div class="grade-info">${o.opis}</div>`;
+                listaOcjena.appendChild(div);
+            } else {
+                div.innerHTML = `<div class="grade-circle" style="background:#764ba2">i</div>
+        <div class="grade-info">${o.opis}</div>`;
+                listaBiljeski.appendChild(div);
             }
-            document.getElementById('razredProsjek').textContent = (ukupnoProsjeka / brojUcenika).toFixed(2);
+        });
+
+        document.getElementById("prosjek").textContent = broj ? (suma / broj).toFixed(2) : "0.00";
+
+        // Izostanci
+        const iz = ucenik.izostanci || [];
+        document.getElementById("brojIzostanaka").textContent = iz.length;
+
+        iz.forEach((i, index) => {
+            const div = document.createElement("div");
+            div.className = "grade-item";
+            div.innerHTML = `<div class="grade-circle" style="background:#e67e22">${index + 1}</div>
+    <div class="grade-info"><strong>${index + 1}. izostanak</strong><br>${i.datum} — ${i.razlog}</div>`;
+            listaIzostanaka.appendChild(div);
+        });
+
+        // TAB funkcija
+        function openTab(evt, tabName) {
+            const tabcontent = document.getElementsByClassName("tabcontent");
+            const tablinks = document.getElementsByClassName("tablinks");
+            for (let i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
+            for (let i = 0; i < tablinks.length; i++) tablinks[i].classList.remove("active");
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.classList.add("active");
         }
     </script>
 </body>

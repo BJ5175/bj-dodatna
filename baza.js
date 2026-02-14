@@ -11,13 +11,13 @@ const baza = {
     "Kalista.Galov": {
         ime: "Kalista Galov",
         izostanci: [
-            { datum: "11.2.2026", razlog: "Obiteljski razlozi" }
-        ],
-        podaci: [
-            { ocjena: null, opis: "Prvi sat 14.2.2026." },
-            { ocjena: null, opis: "Učenica Kalista dobila izostanak : 1" },
             
         ],
-        vladanje: 5
+        podaci: [
+            { ocjena: null, opis: "Bilješka: zaboravila pribor" },
+            { ocjena: null, opis: "Bilješka: Kalistin prvi petnaestominutni čas nije dobro prošao jer je kalista ometala predavanje i odbija slušati što joj se kaže. " },
+            { ocjena: 1, opis: "Usmeni odgovor" },
+        ],
+        vladanje: 4
     }
 };
