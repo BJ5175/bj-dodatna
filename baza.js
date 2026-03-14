@@ -16,6 +16,7 @@ const baza = {
         podaci: [
             { ocjena: null, opis: "Bilješka: zaboravila pribor" },
             { ocjena: null, opis: "Bilješka: Kalistin prvi petnaestominutni čas nije dobro prošao jer je Kalista ometala predavanje i odbija slušati što joj se kaže. " },
+            {ocjena:5, opis:"Trud"}
         ],
         vladanje: 4
     }
